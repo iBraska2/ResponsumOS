@@ -1,8 +1,7 @@
 import type { NextConfig } from "next";
-import type { Configuration } from "webpack";
 
 const nextConfig: NextConfig = {
-  webpack(config: Configuration) {
+  webpack(config: any) {
     // Wir typisieren rule hier explizit als any
     config.module?.rules?.forEach((rule: any) => {
       if (!("oneOf" in rule) || !Array.isArray(rule.oneOf)) return;
