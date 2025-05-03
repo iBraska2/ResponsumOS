@@ -1,5 +1,5 @@
 // src/app/page.tsx
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createClient } from "next-sanity";
 
 type Post = {
