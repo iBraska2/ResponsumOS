@@ -1,0 +1,21 @@
+{
+    "name": "responsum-studio",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+      "dev": "sanity dev",
+      "build": "sanity build",
+      "start": "sanity start"
+    },
+    "dependencies": {
+      "react": "^18.2.0",
+      "react-dom": "^18.2.0",
+      "sanity": "^3.87.1",
+      "styled-components": "^6.1.17"
+    },
+    "devDependencies": {
+      "@sanity/cli": "^3.87.1",
+      "typescript": "^5.0.0"
+    }
+  }
+  

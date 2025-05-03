@@ -6,23 +6,36 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "studio": "npx --prefix studio sanity dev"
   },
   "dependencies": {
+    "@sanity/client": "^7.0.0",
+    "@sanity/icons": "^3.7.0",
+    "@sanity/image-url": "^1.1.0",
+    "@sanity/vision": "^3.87.1",
     "next": "15.3.1",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "next-sanity": "^9.10.6",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "sanity": "^3.87.1",
+    "styled-components": "^6.1.17"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@eslint/eslintrc": "^3.0.0",
+    "@sanity/cli": "^3.87.1",
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.21",
-    "eslint": "^9",
+    "cross-env": "^7.0.3",
+    "eslint": "^9.0.0",
     "eslint-config-next": "15.3.1",
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5"
+    "typescript": "^5.8.3"
+  },
+  "overrides": {
+    "@sanity/client": "^7.0.0"
   }
 }
