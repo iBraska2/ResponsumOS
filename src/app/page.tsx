@@ -2,6 +2,12 @@
 
 import { createClient } from "next-sanity";
 
+type Post = {
+  _id: string;
+  title: string;
+  body: string;
+};
+
 // 1) Sanity-Client direkt hier (nur für Testzwecke)
 const sanityClient = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!, // z.B. "7l3kj0fo"
@@ -12,7 +18,7 @@ const sanityClient = createClient({
 
 export default async function Home() {
   // 2) Alle Posts laden
-  const posts = await sanityClient.fetch(`
+  const posts = await sanityClient.fetch<Post[]>(`
     *[_type == "post"]{
       _id,
       title,
@@ -45,7 +51,7 @@ export default async function Home() {
           <p className="text-gray-600 text-center">Keine Beiträge gefunden.</p>
         ) : (
           <ul className="space-y-8">
-            {posts.map((post: any) => (
+            {posts.map((post) => (
               <li
                 key={post._id}
                 className="bg-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition"
