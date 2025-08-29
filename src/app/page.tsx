@@ -1,31 +1,166 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from "next-sanity";
+import { validateCredentials, setAuthSession, getAuthSession, clearAuthSession } from '../lib/auth';
 
-type Post = {
-  _id: string;
-  title: string;
-  body: string;
-  createdAt?: string;
-  category?: string;
+const MaintenancePage = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Prüfe beim Laden, ob bereits eingeloggt
+  useEffect(() => {
+    const session = getAuthSession();
+    if (session && session.authenticated) {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    // Simuliere eine kurze Verzögerung für bessere UX
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    if (validateCredentials(username, password)) {
+      setAuthSession();
+      setIsAuthenticated(true);
+    } else {
+      setError('Ungültige Anmeldedaten. Bitte versuchen Sie es erneut.');
+    }
+    
+    setIsLoading(false);
+  };
+
+  const handleLogout = () => {
+    clearAuthSession();
+    setIsAuthenticated(false);
+    setUsername('');
+    setPassword('');
+  };
+
+  // Wenn authentifiziert, zeige die ursprüngliche Website
+  if (isAuthenticated) {
+    return <AuthenticatedApp onLogout={handleLogout} />;
+  }
+
+  // Wartungsseite mit Login
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center p-4">
+      <div className="max-w-md w-full">
+        {/* Logo und Header */}
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <span className="text-white font-bold text-2xl">R</span>
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            Responsum<span className="relative">
+              O
+              <span className="absolute inset-0 w-6 h-6 border-2 border-cyan-400 rounded-full opacity-60 transform translate-x-1 translate-y-1"></span>
+            </span>S
+          </h1>
+          <p className="text-gray-300">Wartungsmodus aktiv</p>
+        </div>
+
+        {/* Wartungsnachricht */}
+        <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 mb-6 border border-gray-700">
+          <div className="flex items-center mb-4">
+            <div className="w-3 h-3 bg-yellow-400 rounded-full mr-3 animate-pulse"></div>
+            <h2 className="text-lg font-semibold text-white">Website in Wartung</h2>
+          </div>
+          <p className="text-gray-300 text-sm leading-relaxed">
+            Wir arbeiten derzeit an Verbesserungen für ResponsumOS. 
+            Für den Zugriff auf die Website benötigen Sie gültige Anmeldedaten.
+          </p>
+        </div>
+
+        {/* Login Form */}
+        <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700">
+          <h3 className="text-lg font-semibold text-white mb-4">Administrator Login</h3>
+          
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
+                Benutzername
+              </label>
+              <input
+                type="text"
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                placeholder="Benutzername eingeben"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+                Passwort
+              </label>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                placeholder="Passwort eingeben"
+                required
+              />
+            </div>
+
+            {error && (
+              <div className="bg-red-900/50 border border-red-700 rounded-lg p-3">
+                <p className="text-red-300 text-sm">{error}</p>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            >
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                  Anmeldung läuft...
+                </div>
+              ) : (
+                'Anmelden'
+              )}
+            </button>
+          </form>
+
+          {/* Hinweis */}
+          <div className="mt-6 p-4 bg-blue-900/30 rounded-lg border border-blue-700">
+            <h4 className="text-sm font-medium text-blue-300 mb-2">Zugriff beschränkt</h4>
+            <div className="text-xs text-blue-200 space-y-1">
+              <div>Nur autorisierte Benutzer haben Zugriff auf die Website.</div>
+              <div>Kontaktieren Sie den Administrator für Zugangsdaten.</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center mt-8">
+          <p className="text-gray-400 text-sm">
+            © 2025 ResponsumOS • Wartungsmodus v1.0
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 };
 
-// Sanity Client
-const sanityClient = createClient({
-  projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
-  dataset: process.env.NEXT_PUBLIC_SANITY_DATASET!,
-  apiVersion: "2025-05-03",
-  useCdn: true,
-});
-
-const ResponsumOSLanding = () => {
+// Die ursprüngliche App-Komponente (gekürzt für bessere Übersicht)
+const AuthenticatedApp = ({ onLogout }: { onLogout: () => void }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [activeFeature, setActiveFeature] = useState(0);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -36,141 +171,6 @@ const ResponsumOSLanding = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const fetchedPosts = await sanityClient.fetch<Post[]>(`
-          *[_type == "post"] | order(_createdAt desc)[0...3]{
-            _id,
-            title,
-            body,
-            _createdAt,
-            category
-          }
-        `);
-        setPosts(fetchedPosts);
-      } catch (error) {
-        console.error('Error fetching posts:', error);
-      }
-    };
-
-    fetchPosts();
-  }, []);
-
-  const features = [
-    {
-      title: "Modular Architecture",
-      description: "Build your perfect system from specialized modules for every life domain.",
-      icon: "🧩",
-      benefits: ["Customizable Workflows", "Scalable Modules", "Native Performance"],
-      techDetails: "Built with Tauri 2.5 for optimal performance"
-    },
-    {
-      title: "Data-Driven Decisions",
-      description: "Transform raw data into actionable insights for better life decisions.",
-      icon: "📊",
-      benefits: ["Advanced Analytics", "Predictive Modeling", "Real-time Dashboards"],
-      techDetails: "ML-powered analysis engine with local processing"
-    },
-    {
-      title: "Systems Thinking",
-      description: "Understand interconnections and optimize your life as a networked system.",
-      icon: "🔄",
-      benefits: ["Holistic View", "Dependency Mapping", "Impact Analysis"],
-      techDetails: "Graph-based modeling with advanced visualization"
-    },
-    {
-      title: "Complete Control",
-      description: "Your data, your rules. 100% local processing without cloud dependency.",
-      icon: "🛡️",
-      benefits: ["Local-First", "Zero Tracking", "Full Privacy"],
-      techDetails: "End-to-end encryption with Rust security layer"
-    }
-  ];
-
-  const testimonials = [
-    {
-      name: "Dr. Sarah Chen",
-      role: "Senior Data Scientist, Microsoft",
-      content: "ResponsumOS increased my productivity by 300%. The modular architecture perfectly fits my analytical mindset.",
-      avatar: "SC",
-      company: "Microsoft"
-    },
-    {
-      name: "Marcus Weber",
-      role: "CEO, TechStartup GmbH",
-      content: "As an entrepreneur, I need systems that scale with me. ResponsumOS gives me the control I need.",
-      avatar: "MW",
-      company: "TechStartup"
-    },
-    {
-      name: "Anna Kowalski",
-      role: "Quantified Self Expert",
-      content: "Finally a system that takes my data seriously. The analysis features are on another level.",
-      avatar: "AK",
-      company: "Independent"
-    }
-  ];
-
-  const pricingPlans = [
-    {
-      name: "Explorer",
-      price: "Free",
-      description: "Perfect for getting started with systematic self-management",
-      features: [
-        "3 Core Modules",
-        "Basic Analytics",
-        "Local Storage",
-        "Community Support",
-        "Desktop App Access"
-      ],
-      cta: "Start Free",
-      popular: false,
-      badge: ""
-    },
-    {
-      name: "Professional",
-      price: "$29/month",
-      description: "For ambitious optimizers and data enthusiasts",
-      features: [
-        "All Modules Unlocked",
-        "Advanced Analytics Engine",
-        "Custom Workflows",
-        "Priority Support",
-        "Data Export APIs",
-        "Advanced Integrations",
-        "Backup & Sync"
-      ],
-      cta: "Start 30-Day Trial",
-      popular: true,
-      badge: "Most Popular"
-    },
-    {
-      name: "Enterprise",
-      price: "Custom",
-      description: "Tailored solutions for teams and organizations",
-      features: [
-        "Custom Module Development",
-        "Team Collaboration Suite",
-        "SSO Integration",
-        "Dedicated Success Manager",
-        "On-Premise Deployment",
-        "Custom Integrations",
-        "White-label Options"
-      ],
-      cta: "Contact Sales",
-      popular: false,
-      badge: ""
-    }
-  ];
-
-  const stats = [
-    { value: "15,000+", label: "Active Users" },
-    { value: "99.97%", label: "System Uptime" },
-    { value: "4.2M+", label: "Data Points Processed" },
-    { value: "4.9/5", label: "Enterprise Rating" }
-  ];
-
   return (
     <div className={`min-h-screen transition-all duration-300 ${
       isDarkMode
@@ -178,7 +178,7 @@ const ResponsumOSLanding = () => {
         : 'bg-white text-gray-900'
     }`} style={{ fontFamily: "'Inter', sans-serif" }}>
 
-      {/* Enterprise Navigation */}
+      {/* Navigation mit Logout-Button */}
       <nav className={`fixed w-full z-50 transition-all duration-300 ${
         scrolled
           ? isDarkMode
@@ -188,7 +188,7 @@ const ResponsumOSLanding = () => {
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            {/* Enterprise Logo */}
+            {/* Logo */}
             <div className="flex items-center">
               <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center mr-3 shadow-lg">
                 <span className="text-white font-bold text-xl" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>R</span>
@@ -238,15 +238,12 @@ const ResponsumOSLanding = () => {
                 )}
               </button>
 
-              <button className={`px-4 py-2 font-medium transition-all duration-300 ${
-                isDarkMode
-                  ? 'text-blue-400 hover:text-blue-300'
-                  : 'text-blue-600 hover:text-blue-800'
-              }`}>
-                Sign In
-              </button>
-              <button className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
-                Start Free Trial
+              {/* Logout Button */}
+              <button 
+                onClick={onLogout}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-all duration-300"
+              >
+                Abmelden
               </button>
             </div>
 
@@ -286,13 +283,11 @@ const ResponsumOSLanding = () => {
                   isDarkMode ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-blue-600'
                 }`}>Blog</a>
                 <div className="pt-4 border-t border-gray-700 space-y-3">
-                  <button className={`block w-full text-left font-medium py-2 transition-colors ${
-                    isDarkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'
-                  }`}>
-                    Sign In
-                  </button>
-                  <button className="block w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold transition-all duration-300">
-                    Start Free Trial
+                  <button 
+                    onClick={onLogout}
+                    className="block w-full text-left px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-semibold transition-all duration-300"
+                  >
+                    Abmelden
                   </button>
                 </div>
               </div>
@@ -301,23 +296,13 @@ const ResponsumOSLanding = () => {
         </div>
       </nav>
 
-      {/* Enterprise Hero Section */}
+      {/* Hero Section */}
       <section className="relative pt-24 pb-16 lg:pt-32 lg:pb-24 overflow-hidden">
         <div className={`absolute inset-0 transition-opacity duration-300 ${
           isDarkMode
             ? 'bg-gradient-to-br from-gray-900 via-blue-900/20 to-purple-900/20'
             : 'bg-gradient-to-br from-blue-50 via-white to-cyan-50'
         }`}></div>
-
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className={`absolute -top-8 -right-8 w-32 h-32 rounded-full opacity-20 blur-xl transition-colors duration-300 ${
-            isDarkMode ? 'bg-cyan-400' : 'bg-cyan-400'
-          }`}></div>
-          <div className={`absolute -bottom-8 -left-8 w-24 h-24 rounded-full opacity-20 blur-xl transition-colors duration-300 ${
-            isDarkMode ? 'bg-purple-600' : 'bg-blue-600'
-          }`}></div>
-        </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -363,12 +348,17 @@ const ResponsumOSLanding = () => {
                 </button>
               </div>
 
-              {/* Enterprise Stats */}
+              {/* Stats */}
               <div className={`pt-8 border-t transition-colors duration-300 ${
                 isDarkMode ? 'border-gray-700' : 'border-gray-200'
               }`}>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                  {stats.map((stat, index) => (
+                  {[
+                    { value: "15,000+", label: "Active Users" },
+                    { value: "99.97%", label: "System Uptime" },
+                    { value: "4.2M+", label: "Data Points Processed" },
+                    { value: "4.9/5", label: "Enterprise Rating" }
+                  ].map((stat, index) => (
                     <div key={index} className="text-center lg:text-left">
                       <div className="text-2xl font-bold text-blue-400 mb-1" style={{ fontFamily: "'Fira Code', monospace" }}>
                         {stat.value}
@@ -382,7 +372,7 @@ const ResponsumOSLanding = () => {
               </div>
             </div>
 
-            {/* Enterprise Hero Visual */}
+            {/* Hero Visual */}
             <div className="relative">
               <div className={`relative z-10 rounded-2xl shadow-2xl p-8 border transition-colors duration-300 ${
                 isDarkMode
@@ -404,7 +394,7 @@ const ResponsumOSLanding = () => {
                     }`}>ResponsumOS Enterprise v2.5</div>
                   </div>
 
-                  {/* Enterprise Dashboard Mock */}
+                  {/* Dashboard Mock */}
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className={`font-semibold transition-colors duration-300 ${
@@ -452,27 +442,9 @@ const ResponsumOSLanding = () => {
                         <div className="text-lg font-bold text-orange-500">High</div>
                       </div>
                     </div>
-
-                    <div className="space-y-2">
-                      <div className={`flex items-center justify-between text-sm transition-colors duration-300 ${
-                        isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                      }`}>
-                        <span>Active Modules</span>
-                        <span className="font-medium">12</span>
-                      </div>
-                      <div className={`w-full rounded-full h-2 transition-colors duration-300 ${
-                        isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
-                      }`}>
-                        <div className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full" style={{ width: '85%' }}></div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
-
-              {/* Background Effects */}
-              <div className="absolute -top-8 -right-8 w-32 h-32 bg-cyan-400 rounded-full opacity-20 blur-xl"></div>
-              <div className="absolute -bottom-8 -left-8 w-24 h-24 bg-purple-600 rounded-full opacity-20 blur-xl"></div>
             </div>
           </div>
         </div>
@@ -499,19 +471,43 @@ const ResponsumOSLanding = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Interactive Feature Tabs */}
             <div className="space-y-6">
-              {features.map((feature, index) => (
+              {[
+                {
+                  title: "Modular Architecture",
+                  description: "Build your perfect system from specialized modules for every life domain.",
+                  icon: "🧩",
+                  benefits: ["Customizable Workflows", "Scalable Modules", "Native Performance"],
+                  techDetails: "Built with Tauri 2.5 for optimal performance"
+                },
+                {
+                  title: "Data-Driven Decisions",
+                  description: "Transform raw data into actionable insights for better life decisions.",
+                  icon: "📊",
+                  benefits: ["Advanced Analytics", "Predictive Modeling", "Real-time Dashboards"],
+                  techDetails: "ML-powered analysis engine with local processing"
+                },
+                {
+                  title: "Systems Thinking",
+                  description: "Understand interconnections and optimize your life as a networked system.",
+                  icon: "🔄",
+                  benefits: ["Holistic View", "Dependency Mapping", "Impact Analysis"],
+                  techDetails: "Graph-based modeling with advanced visualization"
+                },
+                {
+                  title: "Complete Control",
+                  description: "Your data, your rules. 100% local processing without cloud dependency.",
+                  icon: "🛡️",
+                  benefits: ["Local-First", "Zero Tracking", "Full Privacy"],
+                  techDetails: "End-to-end encryption with Rust security layer"
+                }
+              ].map((feature, index) => (
                 <div
                   key={index}
                   className={`p-6 rounded-xl cursor-pointer transition-all duration-300 ${
-                    activeFeature === index
-                      ? isDarkMode
-                        ? 'bg-gray-700 shadow-2xl border-2 border-blue-500'
-                        : 'bg-white shadow-2xl border-2 border-blue-300'
-                      : isDarkMode
-                        ? 'bg-gray-800/50 hover:bg-gray-700 hover:shadow-xl'
-                        : 'bg-white/50 hover:bg-white hover:shadow-lg'
+                    isDarkMode
+                      ? 'bg-gray-800/50 hover:bg-gray-700 hover:shadow-xl'
+                      : 'bg-white/50 hover:bg-white hover:shadow-lg'
                   }`}
-                  onClick={() => setActiveFeature(index)}
                 >
                   <div className="flex items-start space-x-4">
                     <div className="text-3xl">{feature.icon}</div>
@@ -522,37 +518,32 @@ const ResponsumOSLanding = () => {
                       <p className={`mb-3 transition-colors duration-300 ${
                         isDarkMode ? 'text-gray-300' : 'text-gray-600'
                       }`}>{feature.description}</p>
-
-                      {activeFeature === index && (
-                        <div className="space-y-3 animate-fadeIn">
-                          <div className="space-y-2">
-                            {feature.benefits.map((benefit, idx) => (
-                              <div key={idx} className="flex items-center space-x-2">
-                                <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                                <span className={`text-sm transition-colors duration-300 ${
-                                  isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                                }`}>{benefit}</span>
-                              </div>
-                            ))}
+                      <div className="space-y-2">
+                        {feature.benefits.map((benefit, idx) => (
+                          <div key={idx} className="flex items-center space-x-2">
+                            <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            <span className={`text-sm transition-colors duration-300 ${
+                              isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                            }`}>{benefit}</span>
                           </div>
-                          <div className={`text-xs font-medium px-3 py-1 rounded-full inline-block transition-colors duration-300 ${
-                            isDarkMode
-                              ? 'bg-blue-900/50 text-blue-300'
-                              : 'bg-blue-100 text-blue-700'
-                          }`}>
-                            {feature.techDetails}
-                          </div>
-                        </div>
-                      )}
+                        ))}
+                      </div>
+                      <div className={`text-xs font-medium px-3 py-1 rounded-full inline-block mt-3 transition-colors duration-300 ${
+                        isDarkMode
+                          ? 'bg-blue-900/50 text-blue-300'
+                          : 'bg-blue-100 text-blue-700'
+                      }`}>
+                        {feature.techDetails}
+                      </div>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Dynamic Feature Visual */}
+            {/* Feature Visual */}
             <div className="relative">
               <div className={`rounded-2xl shadow-2xl p-8 border transition-colors duration-300 ${
                 isDarkMode
@@ -564,138 +555,23 @@ const ResponsumOSLanding = () => {
                     <h3 className={`text-lg font-semibold transition-colors duration-300 ${
                       isDarkMode ? 'text-white' : 'text-gray-900'
                     }`}>
-                      {features[activeFeature].title}
+                      Modular System Overview
                     </h3>
-                    <div className="text-2xl">{features[activeFeature].icon}</div>
+                    <div className="text-2xl">🧩</div>
                   </div>
 
-                  {/* Dynamic Content Based on Active Feature */}
-                  {activeFeature === 0 && (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-3 gap-3">
-                        {['Goals', 'Habits', 'Tasks', 'Health', 'Finance', 'Learning'].map((module, idx) => (
-                          <div key={idx} className={`p-3 rounded-lg text-center transition-colors duration-300 ${
-                            isDarkMode ? 'bg-blue-900/30' : 'bg-blue-50'
-                          }`}>
-                            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg mx-auto mb-2"></div>
-                            <div className={`text-xs font-medium transition-colors duration-300 ${
-                              isDarkMode ? 'text-blue-300' : 'text-blue-900'
-                            }`}>{module}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {activeFeature === 1 && (
-                    <div className="space-y-4">
-                      <div className={`p-4 rounded-lg transition-colors duration-300 ${
-                        isDarkMode ? 'bg-gray-700' : 'bg-gray-50'
-                      }`}>
-                        <div className="flex items-center justify-between mb-2">
-                          <span className={`text-sm font-medium transition-colors duration-300 ${
-                            isDarkMode ? 'text-gray-300' : 'text-gray-700'
-                          }`}>Productivity Trend</span>
-                          <span className="text-sm text-green-500 font-semibold">+23%</span>
-                        </div>
-                        <div className={`w-full rounded-full h-2 transition-colors duration-300 ${
-                          isDarkMode ? 'bg-gray-600' : 'bg-gray-200'
-                        }`}>
-                          <div className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full" style={{ width: '84%' }}></div>
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <div className={`flex justify-between text-sm transition-colors duration-300 ${
-                          isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                        }`}>
-                          <span>Average Focus Time</span>
-                          <span className="font-medium">4.2h</span>
-                        </div>
-                        <div className={`flex justify-between text-sm transition-colors duration-300 ${
-                          isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                        }`}>
-                          <span>Completed Tasks</span>
-                          <span className="font-medium">87</span>
-                        </div>
-                        <div className={`flex justify-between text-sm transition-colors duration-300 ${
-                          isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                        }`}>
-                          <span>Data Points Analyzed</span>
-                          <span className="font-medium">1,247</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {activeFeature === 2 && (
-                    <div className="space-y-4">
-                      <div className="relative h-32">
-                        <svg className="w-full h-32" viewBox="0 0 300 120">
-                          <defs>
-                            <linearGradient id="systemGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                              <stop offset="0%" stopColor="#3B82F6" />
-                              <stop offset="50%" stopColor="#8B5CF6" />
-                              <stop offset="100%" stopColor="#06B6D4" />
-                            </linearGradient>
-                          </defs>
-                          <path
-                            d="M10,100 Q50,70 100,60 T200,30 T290,20"
-                            stroke="url(#systemGradient)"
-                            strokeWidth="3"
-                            fill="none"
-                            className="animate-pulse"
-                          />
-                          <circle cx="50" cy="70" r="3" fill="#3B82F6" />
-                          <circle cx="150" cy="45" r="3" fill="#8B5CF6" />
-                          <circle cx="250" cy="25" r="3" fill="#06B6D4" />
-                          <circle cx="290" cy="20" r="4" fill="#06B6D4" />
-                        </svg>
-                      </div>
-                      <div className="text-center">
-                        <div className={`text-sm mb-1 transition-colors duration-300 ${
-                          isDarkMode ? 'text-gray-400' : 'text-gray-600'
-                        }`}>Systematic Improvement</div>
-                        <div className={`text-lg font-bold transition-colors duration-300 ${
-                          isDarkMode ? 'text-white' : 'text-gray-900'
-                        }`}>+47% in 30 Days</div>
-                      </div>
-                    </div>
-                  )}
-
-                  {activeFeature === 3 && (
-                    <div className="space-y-4">
-                      <div className={`flex items-center space-x-3 p-3 rounded-lg transition-colors duration-300 ${
-                        isDarkMode ? 'bg-green-900/30' : 'bg-green-50'
-                      }`}>
-                        <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                        <span className={`text-sm font-medium transition-colors duration-300 ${
-                          isDarkMode ? 'text-green-300' : 'text-green-800'
-                        }`}>100% Local Processing</span>
-                      </div>
-                      <div className={`flex items-center space-x-3 p-3 rounded-lg transition-colors duration-300 ${
+                  <div className="grid grid-cols-3 gap-3">
+                    {['Goals', 'Habits', 'Tasks', 'Health', 'Finance', 'Learning'].map((module, idx) => (
+                      <div key={idx} className={`p-3 rounded-lg text-center transition-colors duration-300 ${
                         isDarkMode ? 'bg-blue-900/30' : 'bg-blue-50'
                       }`}>
-                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                        <span className={`text-sm font-medium transition-colors duration-300 ${
-                          isDarkMode ? 'text-blue-300' : 'text-blue-800'
-                        }`}>Rust-Level Security</span>
+                        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg mx-auto mb-2"></div>
+                        <div className={`text-xs font-medium transition-colors duration-300 ${
+                          isDarkMode ? 'text-blue-300' : 'text-blue-900'
+                        }`}>{module}</div>
                       </div>
-                      <div className={`flex items-center space-x-3 p-3 rounded-lg transition-colors duration-300 ${
-                        isDarkMode ? 'bg-purple-900/30' : 'bg-purple-50'
-                      }`}>
-                        <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-                        <span className={`text-sm font-medium transition-colors duration-300 ${
-                          isDarkMode ? 'text-purple-300' : 'text-purple-800'
-                        }`}>Zero Tracking Policy</span>
-                      </div>
-                      <div className={`text-center text-xs font-mono p-2 rounded bg-gray-900 text-green-400 ${
-                        isDarkMode ? 'bg-gray-900' : 'bg-gray-800'
-                      }`}>
-                        $ cargo build --release<br />
-                        ✓ Security audit passed
-                      </div>
-                    </div>
-                  )}
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -803,7 +679,29 @@ const ResponsumOSLanding = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
+            {[
+              {
+                name: "Dr. Sarah Chen",
+                role: "Senior Data Scientist, Microsoft",
+                content: "ResponsumOS increased my productivity by 300%. The modular architecture perfectly fits my analytical mindset.",
+                avatar: "SC",
+                company: "Microsoft"
+              },
+              {
+                name: "Marcus Weber",
+                role: "CEO, TechStartup GmbH",
+                content: "As an entrepreneur, I need systems that scale with me. ResponsumOS gives me the control I need.",
+                avatar: "MW",
+                company: "TechStartup"
+              },
+              {
+                name: "Anna Kowalski",
+                role: "Quantified Self Expert",
+                content: "Finally a system that takes my data seriously. The analysis features are on another level.",
+                avatar: "AK",
+                company: "Independent"
+              }
+            ].map((testimonial, index) => (
               <div key={index} className={`rounded-xl p-8 shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 ${
                 isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
               }`}>
@@ -860,7 +758,57 @@ const ResponsumOSLanding = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {pricingPlans.map((plan, index) => (
+            {[
+              {
+                name: "Explorer",
+                price: "Free",
+                description: "Perfect for getting started with systematic self-management",
+                features: [
+                  "3 Core Modules",
+                  "Basic Analytics",
+                  "Local Storage",
+                  "Community Support",
+                  "Desktop App Access"
+                ],
+                cta: "Start Free",
+                popular: false,
+                badge: ""
+              },
+              {
+                name: "Professional",
+                price: "$29/month",
+                description: "For ambitious optimizers and data enthusiasts",
+                features: [
+                  "All Modules Unlocked",
+                  "Advanced Analytics Engine",
+                  "Custom Workflows",
+                  "Priority Support",
+                  "Data Export APIs",
+                  "Advanced Integrations",
+                  "Backup & Sync"
+                ],
+                cta: "Start 30-Day Trial",
+                popular: true,
+                badge: "Most Popular"
+              },
+              {
+                name: "Enterprise",
+                price: "Custom",
+                description: "Tailored solutions for teams and organizations",
+                features: [
+                  "Custom Module Development",
+                  "Team Collaboration Suite",
+                  "SSO Integration",
+                  "Dedicated Success Manager",
+                  "On-Premise Deployment",
+                  "Custom Integrations",
+                  "White-label Options"
+                ],
+                cta: "Contact Sales",
+                popular: false,
+                badge: ""
+              }
+            ].map((plan, index) => (
               <div
                 key={index}
                 className={`relative rounded-2xl p-8 transition-all duration-300 ${
@@ -975,114 +923,6 @@ const ResponsumOSLanding = () => {
                 <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>100% local data</span>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Enterprise Blog Section */}
-      <section id="blog" className={`py-24 transition-colors duration-300 ${
-        isDarkMode ? 'bg-gray-800/50' : 'bg-gray-50'
-      }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-16">
-            <div>
-              <h2 className={`text-4xl font-bold mb-4 transition-colors duration-300 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`} style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                Insights & Enterprise Updates
-              </h2>
-              <p className={`text-xl transition-colors duration-300 ${
-                isDarkMode ? 'text-gray-300' : 'text-gray-600'
-              }`}>
-                Latest insights from the world of systematic self-management and data optimization.
-              </p>
-            </div>
-            <button className={`hidden lg:block px-6 py-3 border-2 rounded-xl font-semibold transition-all duration-300 ${
-              isDarkMode
-                ? 'border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white'
-                : 'border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white'
-            }`}>
-              View All Articles
-            </button>
-          </div>
-
-          {posts.length === 0 ? (
-            <div className="text-center py-16">
-              <div className={`w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6 transition-colors duration-300 ${
-                isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
-              }`}>
-                <svg className={`w-12 h-12 transition-colors duration-300 ${
-                  isDarkMode ? 'text-gray-500' : 'text-gray-400'
-                }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                </svg>
-              </div>
-              <h3 className={`text-xl font-semibold mb-2 transition-colors duration-300 ${
-                isDarkMode ? 'text-white' : 'text-gray-900'
-              }`}>Articles Loading</h3>
-              <p className={`transition-colors duration-300 ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-600'
-              }`}>Our latest insights will appear here shortly.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {posts.map((post) => (
-                <article key={post._id} className={`rounded-xl overflow-hidden shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 group ${
-                  isDarkMode ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'
-                }`}>
-                  <div className="bg-gradient-to-br from-blue-500 to-purple-600 h-48 relative">
-                    <div className="absolute inset-0 bg-black bg-opacity-20"></div>
-                    <div className="absolute bottom-4 left-4 right-4">
-                      {post.category && (
-                        <span className="inline-block px-3 py-1 bg-white bg-opacity-20 text-white rounded-full text-sm font-medium mb-2 backdrop-blur-sm">
-                          {post.category}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="p-6">
-                    <h3 className={`text-xl font-semibold mb-3 transition-colors duration-300 group-hover:text-blue-400 line-clamp-2 ${
-                      isDarkMode ? 'text-white' : 'text-gray-900'
-                    }`}>
-                      {post.title}
-                    </h3>
-                    <p className={`mb-4 line-clamp-3 transition-colors duration-300 ${
-                      isDarkMode ? 'text-gray-300' : 'text-gray-600'
-                    }`}>
-                      {post.body.length > 120 ? `${post.body.substring(0, 120)}...` : post.body}
-                    </p>
-
-                    <div className="flex items-center justify-between">
-                      {post.createdAt && (
-                        <span className={`text-sm transition-colors duration-300 ${
-                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
-                        }`}>
-                          {new Date(post.createdAt).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </span>
-                      )}
-                      <button className="text-blue-500 hover:text-blue-400 font-medium text-sm group-hover:underline transition-colors duration-300">
-                        Read More →
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-
-          <div className="lg:hidden text-center mt-8">
-            <button className={`px-6 py-3 border-2 rounded-xl font-semibold transition-all duration-300 ${
-              isDarkMode
-                ? 'border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white'
-                : 'border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white'
-            }`}>
-              View All Articles
-            </button>
           </div>
         </div>
       </section>
@@ -1214,9 +1054,9 @@ const ResponsumOSLanding = () => {
               <div className="flex items-center space-x-6 text-sm">
                 <span className="text-gray-500">Built with</span>
                 <div className="flex items-center space-x-2">
-                  <span className="px-2 py-1 bg-gray-800 rounded text-orange-400 font-mono text-xs">Tauri 2.5</span>
-                  <span className="px-2 py-1 bg-gray-800 rounded text-blue-400 font-mono text-xs">React</span>
-                  <span className="px-2 py-1 bg-gray-800 rounded text-red-400 font-mono text-xs">Rust</span>
+                  <span className="px-2 py-1 bg-gray-800 rounded text-orange-400 font-mono text-xs">Next.js</span>
+                  <span className="px-2 py-1 bg-gray-800 rounded text-blue-400 font-mono text-xs">Sanity</span>
+                  <span className="px-2 py-1 bg-gray-800 rounded text-red-400 font-mono text-xs">TailwindCSS</span>
                 </div>
               </div>
               <div className="flex space-x-6 mt-4 md:mt-0">
@@ -1235,7 +1075,7 @@ const ResponsumOSLanding = () => {
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
               <span className="text-gray-300 font-medium">
-                Enterprise-Grade • SOC 2 Compliant • GDPR Ready
+                ResponsumOS • One System. Many Answers.
               </span>
             </div>
           </div>
@@ -1245,4 +1085,4 @@ const ResponsumOSLanding = () => {
   );
 };
 
-export default ResponsumOSLanding;
+export default MaintenancePage;

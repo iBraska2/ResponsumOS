@@ -1,0 +1,37 @@
+{
+  "recommendations": [
+    // Rust / Tauri Stack
+    "rust-lang.rust-analyzer",
+    "serayuzgur.crates",
+    "tauri-apps.tauri-vscode",
+    "vadimcn.vscode-lldb",
+
+    // Frontend / Node.js
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "christian-kohler.path-intellisense",
+    "steoates.autoimport",
+    "bradlc.vscode-tailwindcss",
+    "mikestead.dotenv",
+
+    // Productivity & Code Quality
+    "eamodio.gitlens",
+    "mhutchie.git-graph",
+    "gruntfuggly.todo-tree",
+    "aaron-bond.better-comments",
+    "humao.rest-client",
+    "usernamehw.errorlens",
+    "editorconfig.editorconfig",
+
+    // Documentation
+    "yzhang.markdown-all-in-one",
+    "davidanson.vscode-markdownlint",
+
+    // Icons & UI
+    "pkief.material-icon-theme",
+
+    // AI Assistance (Optional)
+    "github.copilot",
+    "github.copilot-chat"
+  ]
+}
