@@ -8,8 +8,8 @@ Die Website ist jetzt durch einen Wartungsmodus geschützt. Standardmäßig wird
 
 **⚠️ WICHTIG:** Diese Zugangsdaten sind nur für Entwicklungszwecke gedacht!
 
-- **Benutzername:** `admin`
-- **Passwort:** `responsum2025`
+- **Benutzername:**
+- **Passwort:** 
 
 ## 🚨 Sicherheitsmaßnahmen für die Produktion
 
